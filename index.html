@@ -1,0 +1,1014 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>家務輪值追蹤器</title>
+<link rel="preconnect" href="https://fonts.googleapis.com/">
+<link rel="preconnect" href="https://fonts.gstatic.com/" crossorigin="">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #f4f6fa;
+  --surface: #ffffff;
+  --surface-soft: #f8fafc;
+  --text-main: #0f172a;
+  --muted: #64748b;
+  --line: #e2e8f0;
+  
+  --primary: #4f46e5;
+  --primary-hover: #4338ca;
+  --primary-soft: #eef2ff;
+  
+  --success: #10b981;
+  --success-soft: #ecfdf5;
+  --warning: #f59e0b;
+  --warning-soft: #fffbeb;
+  --danger: #ef4444;
+  --danger-soft: #fef2f2;
+  
+  --radius-lg: 20px;
+  --radius-md: 12px;
+  --radius-sm: 8px;
+  
+  --shadow-sm: 0 2px 4px rgba(15, 23, 42, 0.04);
+  --shadow-md: 0 10px 25px -5px rgba(15, 23, 42, 0.08), 0 8px 10px -6px rgba(15, 23, 42, 0.04);
+  --shadow-hover: 0 20px 30px -10px rgba(79, 70, 229, 0.15);
+}
+
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: var(--bg);
+  color: var(--text-main);
+  font-family: 'Plus Jakarta Sans', 'Noto Sans TC', -apple-system, BlinkMacSystemFont, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+.app-shell { max-width: 1040px; margin: 0 auto; padding: 40px 20px 80px; }
+
+/* Header */
+.app-header {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  padding: 24px 32px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  box-shadow: var(--shadow-md);
+  margin-bottom: 28px;
+}
+.brand .eyebrow {
+  margin: 0 0 4px;
+  color: var(--primary);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+}
+.brand h1 { margin: 0; font-size: 26px; font-weight: 900; letter-spacing: -0.02em; color: var(--text-main); }
+.brand .tagline { margin: 4px 0 0; color: var(--muted); font-size: 13px; font-weight: 500; }
+
+/* Tabs */
+.tab-nav {
+  display: flex;
+  gap: 6px;
+  padding: 6px;
+  background: var(--surface-soft);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+}
+.tab-btn {
+  border: 0; background: transparent; color: var(--muted);
+  padding: 10px 18px; border-radius: var(--radius-sm); cursor: pointer;
+  font-weight: 700; font-size: 14px; transition: all 0.2s ease;
+}
+.tab-btn:hover { color: var(--text-main); }
+.tab-btn.active {
+  background: #fff; color: var(--primary);
+  box-shadow: var(--shadow-sm);
+}
+.tab-panel { display: none; }
+.tab-panel.active { display: block; }
+
+/* Date Navigator */
+.date-nav { display: flex; justify-content: center; align-items: center; gap: 12px; margin: 20px 0 10px; }
+.nav-btn {
+  width: 40px; height: 40px; border: 1px solid var(--line); background: #fff;
+  border-radius: var(--radius-md); cursor: pointer; font-size: 20px; color: var(--muted);
+  display: grid; place-items: center; transition: all 0.2s ease; box-shadow: var(--shadow-sm);
+}
+.nav-btn:hover { border-color: var(--primary); color: var(--primary); transform: translateY(-1px); }
+.date-input {
+  border: 1px solid var(--line); background: #fff; border-radius: var(--radius-md);
+  padding: 9px 16px; color: var(--text-main); font-weight: 600; font-size: 14px;
+  outline: none; box-shadow: var(--shadow-sm); transition: border-color 0.2s;
+}
+.date-input:focus { border-color: var(--primary); }
+
+.meta-bar {
+  display: flex; justify-content: center; align-items: center; gap: 10px;
+  color: var(--muted); font-size: 13px; font-weight: 600; margin-bottom: 24px; flex-wrap: wrap;
+}
+.meta-badge { padding: 4px 12px; border-radius: 999px; font-weight: 800; font-size: 11px; letter-spacing: 0.05em; }
+.meta-badge.is-today { background: var(--primary-soft); color: var(--primary); }
+.meta-badge.is-future { background: var(--warning-soft); color: var(--warning); }
+.meta-badge.is-past { background: #f1f5f9; color: var(--muted); }
+.today-quick-btn {
+  border: 0; background: var(--primary-soft); color: var(--primary);
+  padding: 5px 12px; border-radius: 999px; cursor: pointer; font-weight: 700; font-size: 12px;
+  transition: all 0.2s ease;
+}
+.today-quick-btn:hover { background: var(--primary); color: #fff; }
+.hidden { display: none !important; }
+
+/* Dashboard Summary Cards */
+.dashboard-summary { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 24px; }
+.summary-card {
+  background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-md);
+  padding: 20px; box-shadow: var(--shadow-sm); transition: transform 0.2s ease;
+}
+.summary-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
+.summary-label { color: var(--muted); font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; }
+.summary-value { font-size: 32px; font-weight: 900; margin-top: 6px; color: var(--text-main); line-height: 1; }
+.summary-accent { color: var(--primary); }
+
+/* Task Grid Layout */
+.turntable-stage { position: relative; }
+.turntable-disc {
+  display: grid !important; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 20px; width: 100% !important; height: auto !important; position: static !important;
+}
+
+/* Chore Cards */
+.plate {
+  position: static !important; width: auto !important; height: auto !important;
+  background: var(--surface) !important; border: 1px solid var(--line) !important;
+  border-radius: var(--radius-lg) !important; box-shadow: var(--shadow-sm) !important;
+  padding: 20px !important; min-height: 160px; display: flex; flex-direction: column; justify-content: space-between;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+.plate:hover { transform: translateY(-4px) !important; box-shadow: var(--shadow-hover) !important; border-color: #c7d2fe !important; }
+.plate-inner { display: flex !important; flex-direction: column !important; height: 100%; width: 100%; }
+.plate-chore {
+  font-size: 18px !important; font-weight: 800 !important; color: var(--text-main) !important;
+  margin-bottom: 12px !important; line-height: 1.3;
+}
+.plate-member {
+  font-size: 26px !important; font-weight: 900 !important; color: var(--primary) !important;
+  margin-bottom: 16px !important; letter-spacing: -0.01em;
+}
+.plate-actions { display: flex !important; gap: 10px !important; margin-top: auto !important; width: 100% !important; }
+.plate-btn {
+  flex: 1 !important; border: 1px solid var(--line) !important; background: var(--surface-soft) !important;
+  color: var(--muted) !important; border-radius: var(--radius-md) !important; padding: 10px !important;
+  cursor: pointer !important; font-weight: 700 !important; font-size: 13px !important;
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+  transition: all 0.2s ease !important;
+}
+.plate-btn:hover { background: var(--primary-soft) !important; color: var(--primary) !important; border-color: #c7d2fe !important; }
+
+.plate.is-done { background: var(--success-soft) !important; border-color: #a7f3d0 !important; }
+.plate.is-done .plate-member { color: var(--success) !important; }
+.plate.is-done .plate-btn { background: #fff !important; color: var(--success) !important; border-color: #a7f3d0 !important; }
+
+.hint-text { text-align: center; color: var(--muted); font-size: 13px; font-weight: 500; margin-top: 24px; }
+
+/* Roster / Settings / History Panels */
+.roster-section { margin-top: 32px; background: #fff; border: 1px solid var(--line); border-radius: var(--radius-lg); padding: 20px 24px; box-shadow: var(--shadow-sm); }
+.roster-strip { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 12px; }
+.roster-chip { background: var(--surface-soft); border: 1px solid var(--line); padding: 6px 14px; border-radius: 999px; font-weight: 700; font-size: 13px; display: flex; align-items: center; gap: 8px; }
+.roster-order { background: var(--primary-soft); color: var(--primary); width: 20px; height: 20px; border-radius: 50%; display: grid; place-items: center; font-size: 11px; }
+
+.settings-block, .history-panel {
+  background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-lg);
+  padding: 24px; margin-bottom: 20px; box-shadow: var(--shadow-sm);
+}
+.section-title { font-size: 18px; font-weight: 800; margin: 0 0 16px; color: var(--text-main); }
+.inline-form { display: flex; align-items: center; gap: 10px; }
+.inline-form input {
+  flex: 1; max-width: 280px; border: 1px solid var(--line); border-radius: var(--radius-md);
+  padding: 10px 14px; font-size: 14px; font-weight: 500; outline: none; transition: border-color 0.2s;
+}
+.inline-form input:focus { border-color: var(--primary); }
+
+.btn-primary {
+  border: 0; background: var(--primary); color: #fff; padding: 10px 20px;
+  border-radius: var(--radius-md); font-weight: 700; font-size: 14px; cursor: pointer; transition: background 0.2s ease;
+}
+.btn-primary:hover { background: var(--primary-hover); }
+.btn-secondary { border: 1px solid var(--line); background: var(--surface-soft); color: var(--muted); padding: 10px 16px; border-radius: var(--radius-md); cursor: pointer; font-weight: 700; }
+.btn-danger { border: 0; background: var(--danger-soft); color: var(--danger); padding: 10px 18px; border-radius: var(--radius-md); font-weight: 700; cursor: pointer; transition: background 0.2s ease; }
+.btn-danger:hover { background: #fee2e2; }
+
+.setting-row { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--line); }
+.setting-row:last-child { border-bottom: 0; }
+.setting-order { width: 28px; height: 28px; border-radius: 8px; background: var(--primary-soft); color: var(--primary); display: grid; place-items: center; font-size: 12px; font-weight: 800; }
+.setting-name { font-weight: 700; flex: 1; font-size: 15px; }
+.icon-btn { border: 0; background: var(--surface-soft); color: var(--muted); width: 34px; height: 34px; border-radius: var(--radius-sm); cursor: pointer; display: grid; place-items: center; transition: all 0.2s ease; }
+.icon-btn:hover { background: var(--danger-soft); color: var(--danger); }
+
+.field-error { color: var(--danger); font-size: 12px; font-weight: 600; min-height: 18px; margin: 6px 0 0; }
+.muted { color: var(--muted); font-size: 13px; }
+
+.history-row { display: flex; gap: 14px; padding: 16px 0; border-bottom: 1px solid var(--line); list-style: none; align-items: flex-start; }
+.history-dot { width: 10px; height: 10px; background: var(--success); border-radius: 50%; margin-top: 5px; flex: none; box-shadow: 0 0 0 4px var(--success-soft); }
+.history-line { font-size: 15px; font-weight: 500; }
+.history-time { color: var(--muted); font-size: 12px; margin-top: 4px; font-weight: 500; }
+
+/* Modals & Toasts */
+.modal { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.4); backdrop-filter: blur(4px); display: grid; place-items: center; padding: 20px; z-index: 50; }
+.modal-card { width: min(420px, 100%); background: #fff; border-radius: var(--radius-lg); padding: 28px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.1); }
+.modal-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+.modal-head h3 { margin: 0; font-size: 18px; font-weight: 800; }
+.modal-member-list { display: flex; flex-direction: column; gap: 8px; margin: 16px 0; }
+.modal-member-btn { border: 1px solid var(--line); background: var(--surface-soft); color: var(--text-main); padding: 12px 16px; border-radius: var(--radius-md); text-align: left; cursor: pointer; font-weight: 700; font-size: 14px; transition: all 0.2s ease; }
+.modal-member-btn:hover, .modal-member-btn.is-current { border-color: #c7d2fe; background: var(--primary-soft); color: var(--primary); }
+
+.toast { position: fixed; left: 50%; bottom: 28px; transform: translate(-50%, 20px); background: var(--text-main); color: #fff; padding: 12px 24px; border-radius: 999px; font-weight: 600; font-size: 14px; opacity: 0; pointer-events: none; transition: all 0.2s ease; z-index: 60; box-shadow: var(--shadow-md); }
+.toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+@media(max-width: 768px) {
+  .app-shell { padding: 20px 14px 60px; }
+  .app-header { flex-direction: column; align-items: flex-start; padding: 20px; }
+  .tab-nav { width: 100%; } .tab-btn { flex: 1; text-align: center; }
+  .dashboard-summary { grid-template-columns: 1fr; }
+  .turntable-disc { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+  <div id="loading-screen" class="loading-screen hidden">
+    <p>載入追蹤器資料中…</p>
+  </div>
+
+  <div id="app" class="app-shell">
+    <header class="app-header">
+      <div class="brand">
+        <p class="eyebrow">Chore Tracker</p>
+        <h1>家務輪值追蹤器</h1>
+        <p class="tagline"></p>
+      </div>
+      <nav class="tab-nav" role="tablist" aria-label="頁面切換">
+        <button type="button" class="tab-btn active" data-tab="turntable" role="tab" aria-selected="true">家務列表</button>
+        <button type="button" class="tab-btn" data-tab="history" role="tab" aria-selected="false">歷史紀錄</button>
+        <button type="button" class="tab-btn" data-tab="settings" role="tab" aria-selected="false">設定</button>
+      </nav>
+    </header>
+
+    <main>
+      <section id="panel-turntable" class="tab-panel active">
+        <div class="date-nav">
+          <button type="button" id="date-prev-btn" class="nav-btn" aria-label="回到上一輪">‹</button>
+          <input type="date" id="date-input" class="date-input" aria-label="選擇檢視日期" min="2026-08-23">
+          <button type="button" id="date-next-btn" class="nav-btn" aria-label="前往下一輪">›</button>
+        </div>
+        <div class="meta-bar">
+          <span id="meta-date">2026年8月23日週日</span>
+          <span id="meta-badge" class="meta-badge is-today">今天</span>
+          <span class="meta-dot">・</span>
+          <span id="meta-round">第 1 輪</span>
+          <span class="meta-dot">・</span>
+          <span id="meta-cycle">每 7 天輪替</span>
+          <button type="button" id="date-today-btn" class="today-quick-btn hidden">回到今天</button>
+        </div>
+
+        <div class="dashboard-summary">
+          <div class="summary-card"><div class="summary-label">今日家務</div><div class="summary-value" id="summary-total">0</div></div>
+          <div class="summary-card"><div class="summary-label">已完成</div><div class="summary-value" id="summary-done">0</div></div>
+          <div class="summary-card"><div class="summary-label">輪值週期</div><div class="summary-value summary-accent" id="summary-cycle">7 天</div></div>
+        </div>
+
+        <div class="turntable-stage">
+          <div class="turntable-disc" id="turntable-disc">
+            <p class="turntable-empty hidden" id="turntable-empty">請先到「設定」新增至少一位成員</p>
+          </div>
+        </div>
+        <p class="hint-text">選擇日期或用 ‹ › 預覽任一輪負責人・點 ✓ 完成打卡・點 ⇄ 臨時換手</p>
+
+        <div class="roster-section">
+          <h2 class="section-title">成員輪值順序</h2>
+          <div class="roster-strip" id="roster-strip"></div>
+        </div>
+      </section>
+
+      <section id="panel-history" class="tab-panel">
+        <div class="history-panel">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+            <h2 class="section-title" style="margin:0;">歷史紀錄</h2>
+            <span id="history-count" class="muted">共 0 筆紀錄</span>
+          </div>
+          <ul class="history-list" id="history-list"></ul>
+        </div>
+      </section>
+
+      <section id="panel-settings" class="tab-panel">
+        <div class="settings-block">
+          <h2 class="section-title">成員管理</h2>
+          <form id="member-form" class="inline-form">
+            <input id="member-input" type="text" placeholder="輸入成員名字" maxlength="20" autocomplete="off">
+            <button type="submit" class="btn-primary">新增</button>
+          </form>
+          <p class="field-error" id="member-error"></p>
+          <ul class="setting-list" id="members-list"></ul>
+        </div>
+
+        <div class="settings-block">
+          <h2 class="section-title">家務項目</h2>
+          <form id="chore-form" class="inline-form">
+            <input id="chore-input" type="text" placeholder="輸入家務項目，例如：倒垃圾" maxlength="20" autocomplete="off">
+            <button type="submit" class="btn-primary">新增</button>
+          </form>
+          <p class="field-error" id="chore-error"></p>
+          <ul class="setting-list" id="chores-list"></ul>
+        </div>
+
+        <div class="settings-block">
+          <h2 class="section-title">輪值週期</h2>
+          <form id="cycle-form" class="inline-form">
+            <input id="cycle-input" type="number" min="1" max="30" step="1">
+            <span class="muted" style="font-weight:600;">天／輪</span>
+            <button type="submit" class="btn-primary">套用</button>
+          </form>
+          <p class="field-error" id="cycle-error"></p>
+          <p class="muted" id="epoch-display" style="margin-top:12px;">輪值起始日：2026年8月23日</p>
+        </div>
+
+        <div class="settings-block">
+          <h2 class="section-title">資料匯出與管理</h2>
+          <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 12px;">
+            <button type="button" id="copy-text-btn" class="btn-primary">複製 LINE 排班文字</button>
+            <button type="button" id="export-csv-btn" class="btn-secondary">下載 Excel (CSV)</button>
+            <button type="button" id="reset-btn" class="btn-danger">重置所有資料</button>
+          </div>
+          <p class="muted">可複製未來 4 輪的班表貼至群組，或下載 Excel 表格備份。</p>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div class="modal hidden" id="reassign-modal">
+    <div class="modal-card">
+      <div class="modal-head">
+        <h3 id="modal-title">臨時指派</h3>
+        <button type="button" class="icon-btn" id="modal-close-btn" aria-label="關閉">✕</button>
+      </div>
+      <p class="muted">選擇本輪臨時負責的成員：</p>
+      <div class="modal-member-list" id="modal-member-list"></div>
+      <button type="button" class="btn-secondary hidden" id="modal-reset-btn" style="width:100%;">恢復自動排班</button>
+    </div>
+  </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(function(){
+  'use strict';
+
+  var STORAGE_KEY = 'chore-rotation-state-v1';
+  var DAY_MS = 86400000;
+
+  var state = null;
+  var activeReassignChoreId = null;
+  var viewDate = null;
+  var followingToday = true;
+
+  function $(sel, root){ return (root || document).querySelector(sel); }
+  function $all(sel, root){ return Array.prototype.slice.call((root || document).querySelectorAll(sel)); }
+
+  function uid(){
+    if (window.crypto && crypto.randomUUID) return crypto.randomUUID();
+    return 'id-' + Date.now() + '-' + Math.random().toString(16).slice(2);
+  }
+
+  function pad2(n){ return String(n).padStart(2,'0'); }
+
+  function todayISODate(){
+    var d = new Date();
+    return d.getFullYear() + '-' + pad2(d.getMonth()+1) + '-' + pad2(d.getDate());
+  }
+
+  function parseISODateLocal(str){
+    var parts = str.split('-').map(Number);
+    return new Date(parts[0], parts[1]-1, parts[2]);
+  }
+
+  function todayMidnight(){
+    var d = new Date();
+    return new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  }
+
+  function toISODateString(d){
+    return d.getFullYear() + '-' + pad2(d.getMonth()+1) + '-' + pad2(d.getDate());
+  }
+
+  function isSameDate(a, b){
+    return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
+  }
+
+  function escapeHtml(str){
+    return String(str).replace(/[&<>"']/g, function(s){
+      return { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[s];
+    });
+  }
+
+  function defaultState(){
+    return {
+      members: [],
+      chores: [],
+      cycleDays: 7,
+      epoch: todayISODate(),
+      overrides: {},
+      completions: {}
+    };
+  }
+
+  function normalizeState(raw){
+    var s = Object.assign(defaultState(), raw || {});
+    s.members = Array.isArray(s.members) ? s.members : [];
+    s.chores = Array.isArray(s.chores) ? s.chores : [];
+    s.overrides = (s.overrides && typeof s.overrides === 'object') ? s.overrides : {};
+    s.completions = (s.completions && typeof s.completions === 'object') ? s.completions : {};
+    if (!s.epoch) s.epoch = todayISODate();
+    if (!s.cycleDays || s.cycleDays < 1 || s.cycleDays > 30) s.cycleDays = 7;
+    return s;
+  }
+
+  function loadState(){
+    try {
+      var raw = localStorage.getItem(STORAGE_KEY);
+      if (raw) {
+        state = normalizeState(JSON.parse(raw));
+      } else {
+        state = defaultState();
+      }
+    } catch (e) {
+      state = defaultState();
+    }
+  }
+
+  function saveState(){
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    } catch (e) {
+      showToast('資料儲存失敗，請確認瀏覽器允許儲存');
+    }
+  }
+
+  function periodForDate(dateObj){
+    var epochDate = parseISODateLocal(state.epoch);
+    var diffDays = Math.round((dateObj - epochDate) / DAY_MS);
+    var period = Math.floor(diffDays / state.cycleDays);
+    return period < 0 ? 0 : period;
+  }
+
+  function viewPeriod(){
+    return periodForDate(viewDate);
+  }
+
+  function getAssignment(chore, index, period){
+    var n = state.members.length;
+    if (n === 0) return { member: null, isOverride: false, autoMember: null };
+    var autoIdx = ((period + index) % n + n) % n;
+    var autoMember = state.members[autoIdx];
+    var ov = state.overrides[chore.id];
+    if (ov && ov.period === period) {
+      var m = state.members.find(function(mm){ return mm.id === ov.memberId; });
+      if (m) return { member: m, isOverride: true, autoMember: autoMember };
+    }
+    return { member: autoMember, isOverride: false, autoMember: autoMember };
+  }
+
+  function completionKey(choreId, period){ return choreId + '::' + period; }
+
+  function formatDateDisplay(isoDateStr){
+    var d = parseISODateLocal(isoDateStr);
+    return d.toLocaleDateString('zh-TW', { year:'numeric', month:'long', day:'numeric' });
+  }
+  function formatDateTimeDisplay(isoStr){
+    var d = new Date(isoStr);
+    return d.toLocaleString('zh-TW', { year:'numeric', month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit' });
+  }
+
+  function checkOutlineSVG(){
+    return '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>';
+  }
+  function swapSVG(){
+    return '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h13l-3-3M20 17H7l3 3"></path></svg>';
+  }
+  function trashSVG(){
+    return '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"></path></svg>';
+  }
+
+  function render(){
+    renderSummary();
+    renderMeta();
+    renderTurntable();
+    renderRoster();
+    renderSettings();
+    renderHistory();
+  }
+
+  function renderSummary(){
+    var total = (state && state.chores) ? state.chores.length : 0;
+    var done = 0;
+    if (state && state.completions){
+      Object.keys(state.completions).forEach(function(k){
+        if (k.indexOf('::' + viewPeriod()) !== -1) done++;
+      });
+    }
+    var a=document.getElementById('summary-total'),b=document.getElementById('summary-done'),c=document.getElementById('summary-cycle');
+    if(a)a.textContent=total;
+    if(b)b.textContent=Math.min(done,total);
+    if(c)c.textContent=(state ? state.cycleDays : 7)+' 天';
+  }
+
+  function renderMeta(){
+    var period = viewPeriod();
+    var today = todayMidnight();
+    var dateStr = viewDate.toLocaleDateString('zh-TW', { year:'numeric', month:'long', day:'numeric', weekday:'short' });
+    $('#meta-date').textContent = dateStr;
+    $('#meta-round').textContent = '第 ' + (period + 1) + ' 輪';
+    $('#meta-cycle').textContent = '每 ' + state.cycleDays + ' 天輪替';
+
+    var badge = $('#meta-badge');
+    if (isSameDate(viewDate, today)) {
+      badge.textContent = '今天';
+      badge.className = 'meta-badge is-today';
+    } else if (viewDate > today) {
+      badge.textContent = '未來預覽';
+      badge.className = 'meta-badge is-future';
+    } else {
+      badge.textContent = '歷史';
+      badge.className = 'meta-badge is-past';
+    }
+
+    $('#date-today-btn').classList.toggle('hidden', followingToday);
+    $('#date-input').min = state.epoch;
+    $('#date-input').value = toISODateString(viewDate);
+  }
+
+  function renderRoster(){
+    var wrap = $('#roster-strip');
+    wrap.innerHTML = '';
+    if (state.members.length === 0){
+      wrap.innerHTML = '<p class="muted">尚未新增成員，請到「設定」加入家人或室友。</p>';
+      return;
+    }
+    state.members.forEach(function(m, i){
+      var chip = document.createElement('div');
+      chip.className = 'roster-chip';
+      chip.innerHTML = '<span class="roster-order">' + (i+1) + '</span><span>' + escapeHtml(m.name) + '</span>';
+      wrap.appendChild(chip);
+    });
+  }
+
+  function renderTurntable(){
+    var disc = $('#turntable-disc');
+    disc.innerHTML = '';
+
+    var period = viewPeriod();
+    var isFuture = viewDate > todayMidnight();
+    var n = state.chores.length;
+
+    if (state.members.length === 0 || n === 0) {
+      var emptyEl = document.createElement('p');
+      emptyEl.className = 'muted';
+      emptyEl.style.padding = '40px 0';
+      emptyEl.style.textAlign = 'center';
+      emptyEl.textContent = state.members.length === 0
+        ? '請先到「設定」新增至少一位成員'
+        : '請先到「設定」新增至少一項家務';
+      disc.appendChild(emptyEl);
+      return;
+    }
+
+    state.chores.forEach(function(chore, i){
+      var a = getAssignment(chore, i, period);
+      var member = a.member;
+      var isOverride = a.isOverride;
+      var key = completionKey(chore.id, period);
+      var done = !!state.completions[key];
+
+      var plate = document.createElement('div');
+      plate.className = 'plate' + (done ? ' is-done' : '');
+
+      var doneLabel = done ? '已完成' : '標記完成';
+
+      plate.innerHTML =
+        '<div class="plate-inner">' +
+          '<div class="plate-chore" title="' + escapeHtml(chore.name) + '">' + escapeHtml(chore.name) + '</div>' +
+          '<div class="plate-member">' + (member ? escapeHtml(member.name) : '—') + '</div>' +
+          '<div class="plate-actions">' +
+            '<button type="button" class="plate-btn done-btn" ' + (isFuture ? 'disabled' : '') + '>' +
+              checkOutlineSVG() + ' ' + doneLabel +
+            '</button>' +
+            '<button type="button" class="plate-btn swap-btn">' +
+              swapSVG() + ' 換手' +
+            '</button>' +
+          '</div>' +
+        '</div>';
+
+      if (!isFuture) {
+        $('.done-btn', plate).addEventListener('click', function(e){
+          e.stopPropagation();
+          toggleCompletion(chore, i, period);
+        });
+      }
+      $('.swap-btn', plate).addEventListener('click', function(e){
+        e.stopPropagation();
+        openReassignModal(chore.id);
+      });
+
+      disc.appendChild(plate);
+    });
+  }
+
+  function toggleCompletion(chore, index, period){
+    var key = completionKey(chore.id, period);
+    if (state.completions[key]) {
+      delete state.completions[key];
+    } else {
+      var a = getAssignment(chore, index, period);
+      var member = a.member;
+      state.completions[key] = {
+        choreId: chore.id,
+        choreName: chore.name,
+        memberId: member ? member.id : null,
+        memberName: member ? member.name : '未指派',
+        period: period,
+        completedAt: new Date().toISOString()
+      };
+    }
+    saveState();
+    renderTurntable();
+    renderSummary();
+    renderHistory();
+  }
+
+  function openReassignModal(choreId){
+    activeReassignChoreId = choreId;
+    var chore = state.chores.find(function(c){ return c.id === choreId; });
+    if (!chore) return;
+    var period = viewPeriod();
+    var idx = state.chores.findIndex(function(c){ return c.id === choreId; });
+    var a = getAssignment(chore, idx, period);
+    var currentMember = a.member;
+
+    var roundLabel = isSameDate(viewDate, todayMidnight()) ? '本輪' : ('第 ' + (period + 1) + ' 輪');
+    $('#modal-title').textContent = roundLabel + '臨時指派：' + chore.name;
+    var list = $('#modal-member-list');
+    list.innerHTML = '';
+    state.members.forEach(function(m){
+      var btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'modal-member-btn' + (currentMember && m.id === currentMember.id ? ' is-current' : '');
+      btn.textContent = m.name;
+      btn.addEventListener('click', function(){
+        state.overrides[choreId] = { period: period, memberId: m.id };
+        saveState();
+        closeReassignModal();
+        renderTurntable();
+      });
+      list.appendChild(btn);
+    });
+
+    $('#modal-reset-btn').classList.toggle('hidden', !a.isOverride);
+    $('#reassign-modal').classList.remove('hidden');
+  }
+
+  function closeReassignModal(){
+    $('#reassign-modal').classList.add('hidden');
+    activeReassignChoreId = null;
+  }
+
+  function renderSettings(){
+    renderMembersSettings();
+    renderChoresSettings();
+    $('#cycle-input').value = state.cycleDays;
+    $('#epoch-display').textContent = '輪值起始日：' + formatDateDisplay(state.epoch);
+  }
+
+  function renderMembersSettings(){
+    var list = $('#members-list');
+    list.innerHTML = '';
+    if (state.members.length === 0) {
+      list.innerHTML = '<li class="muted" style="padding:10px 0;">尚未新增成員</li>';
+      return;
+    }
+    state.members.forEach(function(m, i){
+      var li = document.createElement('li');
+      li.className = 'setting-row';
+      li.innerHTML =
+        '<span class="setting-order">' + (i+1) + '</span>' +
+        '<span class="setting-name">' + escapeHtml(m.name) + '</span>' +
+        '<button type="button" class="icon-btn remove-member-btn" aria-label="移除">' + trashSVG() + '</button>';
+      $('.remove-member-btn', li).addEventListener('click', function(){ removeMember(m.id); });
+      list.appendChild(li);
+    });
+  }
+
+  function renderChoresSettings(){
+    var list = $('#chores-list');
+    list.innerHTML = '';
+    if (state.chores.length === 0) {
+      list.innerHTML = '<li class="muted" style="padding:10px 0;">尚未新增家務項目</li>';
+      return;
+    }
+    state.chores.forEach(function(c, i){
+      var li = document.createElement('li');
+      li.className = 'setting-row';
+      li.innerHTML =
+        '<span class="setting-order">' + (i+1) + '</span>' +
+        '<span class="setting-name">' + escapeHtml(c.name) + '</span>' +
+        '<button type="button" class="icon-btn remove-chore-btn" aria-label="移除">' + trashSVG() + '</button>';
+      $('.remove-chore-btn', li).addEventListener('click', function(){ removeChore(c.id); });
+      list.appendChild(li);
+    });
+  }
+
+  function addMember(name){
+    var trimmed = (name || '').trim();
+    if (!trimmed) { showFieldError('member-error', '請輸入成員名字'); return; }
+    var dup = state.members.some(function(m){ return m.name === trimmed; });
+    if (dup) { showFieldError('member-error', '此成員已存在'); return; }
+    state.members.push({ id: uid(), name: trimmed });
+    clearFieldError('member-error');
+    saveState();
+    render();
+  }
+
+  function removeMember(id){
+    state.members = state.members.filter(function(m){ return m.id !== id; });
+    saveState();
+    render();
+  }
+
+  function addChore(name){
+    var trimmed = (name || '').trim();
+    if (!trimmed) { showFieldError('chore-error', '請輸入家務項目名稱'); return; }
+    var dup = state.chores.some(function(c){ return c.name === trimmed; });
+    if (dup) { showFieldError('chore-error', '此家務已存在'); return; }
+    state.chores.push({ id: uid(), name: trimmed });
+    clearFieldError('chore-error');
+    saveState();
+    render();
+  }
+
+  function removeChore(id){
+    state.chores = state.chores.filter(function(c){ return c.id !== id; });
+    delete state.overrides[id];
+    saveState();
+    render();
+  }
+
+  function applyCycle(value){
+    var n = parseInt(value, 10);
+    if (!Number.isInteger(n) || n < 1 || n > 30) {
+      showFieldError('cycle-error', '請輸入 1 到 30 之間的整數');
+      return;
+    }
+    clearFieldError('cycle-error');
+    state.cycleDays = n;
+    state.overrides = {};
+    saveState();
+    render();
+    showToast('已套用新的輪值週期');
+  }
+
+  function renderHistory(){
+    var list = $('#history-list');
+    var entries = Object.keys(state.completions).map(function(k){ return state.completions[k]; });
+    entries.sort(function(a, b){ return new Date(b.completedAt) - new Date(a.completedAt); });
+    $('#history-count').textContent = '共 ' + entries.length + ' 筆紀錄';
+    list.innerHTML = '';
+    if (entries.length === 0) {
+      list.innerHTML = '<li class="muted" style="padding:12px 0;">還沒有完成紀錄，做完家務後記得打卡！</li>';
+      return;
+    }
+    entries.forEach(function(e){
+      var li = document.createElement('li');
+      li.className = 'history-row';
+      li.innerHTML =
+        '<div class="history-dot"></div>' +
+        '<div class="history-body">' +
+          '<div class="history-line"><strong>' + escapeHtml(e.memberName) + '</strong> 完成了 <strong>' + escapeHtml(e.choreName) + '</strong></div>' +
+          '<div class="history-time">' + formatDateTimeDisplay(e.completedAt) + '</div>' +
+        '</div>';
+      list.appendChild(li);
+    });
+  }
+
+  var toastTimer = null;
+  function showToast(msg){
+    var t = $('#toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function(){ t.classList.remove('show'); }, 2600);
+  }
+
+  function showFieldError(id, msg){
+    var el = document.getElementById(id);
+    if (el) { el.textContent = msg; }
+  }
+  function clearFieldError(id){
+    var el = document.getElementById(id);
+    if (el) { el.textContent = ''; }
+  }
+
+  function initTabs(){
+    $all('.tab-btn').forEach(function(btn){
+      btn.addEventListener('click', function(){
+        $all('.tab-btn').forEach(function(b){ b.classList.remove('active'); b.setAttribute('aria-selected','false'); });
+        $all('.tab-panel').forEach(function(p){ p.classList.remove('active'); });
+        btn.classList.add('active');
+        btn.setAttribute('aria-selected','true');
+        $('#panel-' + btn.dataset.tab).classList.add('active');
+        if (btn.dataset.tab === 'turntable') renderTurntable();
+      });
+    });
+  }
+
+  function shiftView(deltaDays){
+    var d = new Date(viewDate);
+    d.setDate(d.getDate() + deltaDays);
+    var epochDate = parseISODateLocal(state.epoch);
+    if (d < epochDate) d = epochDate;
+    viewDate = d;
+    followingToday = isSameDate(viewDate, todayMidnight());
+    renderMeta();
+    renderTurntable();
+  }
+
+  function initDateNav(){
+    $('#date-prev-btn').addEventListener('click', function(){ shiftView(-state.cycleDays); });
+    $('#date-next-btn').addEventListener('click', function(){ shiftView(state.cycleDays); });
+    $('#date-today-btn').addEventListener('click', function(){
+      viewDate = todayMidnight();
+      followingToday = true;
+      renderMeta();
+      renderTurntable();
+    });
+    $('#date-input').addEventListener('change', function(){
+      if (!this.value) return;
+      var d = parseISODateLocal(this.value);
+      var epochDate = parseISODateLocal(state.epoch);
+      if (d < epochDate) d = epochDate;
+      viewDate = d;
+      followingToday = isSameDate(viewDate, todayMidnight());
+      renderMeta();
+      renderTurntable();
+    });
+  }
+
+  /* 複製 LINE 排班純文字 */
+  function copyTextSchedule(){
+    if (state.chores.length === 0 || state.members.length === 0) {
+      showToast('請先新增成員與家務');
+      return;
+    }
+    var currentP = periodForDate(todayMidnight());
+    var epochDate = parseISODateLocal(state.epoch);
+    var textOutput = '🧹【家務輪值表】\n';
+
+    for (var p = currentP; p < currentP + 4; p++) {
+      var pStartDate = new Date(epochDate.getTime() + (p * state.cycleDays * DAY_MS));
+      var pEndDate = new Date(pStartDate.getTime() + ((state.cycleDays - 1) * DAY_MS));
+      
+      var startStr = (pStartDate.getMonth()+1) + '/' + pStartDate.getDate();
+      var endStr = (pEndDate.getMonth()+1) + '/' + pEndDate.getDate();
+
+      textOutput += '\n📅 第 ' + (p + 1) + ' 輪 (' + startStr + ' ~ ' + endStr + '):\n';
+
+      state.chores.forEach(function(chore, i) {
+        var a = getAssignment(chore, i, p);
+        var memberName = a.member ? a.member.name : '未指派';
+        textOutput += '  • ' + chore.name + ' ➔ ' + memberName + '\n';
+      });
+    }
+
+    navigator.clipboard.writeText(textOutput).then(function() {
+      showToast('已複製班表！可直接貼到 LINE 群組');
+    }).catch(function() {
+      showToast('複製失敗，請手動複製');
+    });
+  }
+
+  /* 下載 CSV 檔案 */
+  function exportToCSV(){
+    if (state.chores.length === 0 || state.members.length === 0) {
+      showToast('請先新增成員與家務');
+      return;
+    }
+
+    var currentP = periodForDate(todayMidnight());
+    var epochDate = parseISODateLocal(state.epoch);
+    var csvRows = [['輪次', '開始日期', '結束日期', '家務項目', '負責人']];
+
+    for (var p = currentP; p < currentP + 12; p++) {
+      var pStartDate = new Date(epochDate.getTime() + (p * state.cycleDays * DAY_MS));
+      var pEndDate = new Date(pStartDate.getTime() + ((state.cycleDays - 1) * DAY_MS));
+
+      var startStr = toISODateString(pStartDate);
+      var endStr = toISODateString(pEndDate);
+
+      state.chores.forEach(function(chore, i) {
+        var a = getAssignment(chore, i, p);
+        var memberName = a.member ? a.member.name : '未指派';
+        csvRows.push(['第 ' + (p + 1) + ' 輪', startStr, endStr, chore.name, memberName]);
+      });
+    }
+
+    var csvContent = '\uFEFF' + csvRows.map(function(row){
+      return row.map(function(field){ return '"' + String(field).replace(/"/g, '""') + '"'; }).join(',');
+    }).join('\n');
+
+    var blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    var link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.setAttribute('download', '家務輪值表_' + todayISODate() + '.csv');
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    showToast('已開始下載 Excel (CSV) 檔案');
+  }
+
+  function initForms(){
+    $('#member-form').addEventListener('submit', function(e){
+      e.preventDefault();
+      var input = $('#member-input');
+      addMember(input.value);
+      input.value = '';
+      input.focus();
+    });
+
+    $('#chore-form').addEventListener('submit', function(e){
+      e.preventDefault();
+      var input = $('#chore-input');
+      addChore(input.value);
+      input.value = '';
+      input.focus();
+    });
+
+    $('#cycle-form').addEventListener('submit', function(e){
+      e.preventDefault();
+      applyCycle($('#cycle-input').value);
+    });
+
+    var copyBtn = $('#copy-text-btn');
+    if (copyBtn) copyBtn.addEventListener('click', copyTextSchedule);
+
+    var csvBtn = $('#export-csv-btn');
+    if (csvBtn) csvBtn.addEventListener('click', exportToCSV);
+
+    var resetBtn = $('#reset-btn');
+    resetBtn.addEventListener('click', function(){
+      if (confirm('確定要重置所有家務追蹤資料嗎？這項操作無法復原。')) {
+        state = defaultState();
+        viewDate = todayMidnight();
+        followingToday = true;
+        saveState();
+        render();
+        showToast('已重置所有資料');
+      }
+    });
+  }
+
+  function initModal(){
+    $('#modal-close-btn').addEventListener('click', closeReassignModal);
+    $('#reassign-modal').addEventListener('click', function(e){
+      if (e.target.id === 'reassign-modal') closeReassignModal();
+    });
+    $('#modal-reset-btn').addEventListener('click', function(){
+      if (activeReassignChoreId) {
+        delete state.overrides[activeReassignChoreId];
+        saveState();
+        closeReassignModal();
+        renderTurntable();
+      }
+    });
+  }
+
+  function init(){
+    loadState();
+    viewDate = todayMidnight();
+    followingToday = true;
+    $('#loading-screen').classList.add('hidden');
+    $('#app').classList.remove('hidden');
+    initTabs();
+    initForms();
+    initDateNav();
+    initModal();
+    render();
+  }
+
+  document.addEventListener('DOMContentLoaded', init);
+})();
+</script>
+</body>
+</html>
